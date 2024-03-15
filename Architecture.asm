@@ -2,38 +2,71 @@
 .stack 100h
 
 .data
-    input_msg db 10, 13, 'Enter numbers: $'
-    output_msg db 10, 13, 'You entered: $'
-    buffer db 255, ?, 255 dup('$') ; буфер для зберігання введеного рядка
+oneChar db ?
+numbersCount dw 0             
 
 .code
-    main PROC
-        mov ax, @data
-        mov ds, ax
+main:
+    mov ax, @data
+    mov ds, ax
 
-        ; Просимо у користувача ввести числа
-        mov ah, 09h
-        lea dx, input_msg
-        int 21h
+    call read_next
+    call print_numbers
 
-        ; Зчитуємо введений рядок
-        mov ah, 0Ah
-        lea dx, buffer
-        int 21h
+    mov ah, 4Ch
+    int 21h
 
-        ; Виводимо повідомлення про введений рядок
-        mov ah, 09h
-        lea dx, output_msg
-        int 21h
+read_next:
+    mov ah, 3Fh
+    mov bx, 0h 
+    mov cx, 1  
+    mov dx, offset oneChar  
+    int 21h 
 
-        ; Виводимо введений рядок
-        mov ah, 09h
-        lea dx, buffer+2 
-        int 21h
+    ; do something with [oneChar]
+    cmp oneChar, ' '    
+    je saveNumber        
+    cmp oneChar, 0Dh     
+    je saveNumber        
+    cmp oneChar, 0Ah     
+    je saveNumber       
 
-        mov ah, 4Ch    ; вихід із програми
-        int 21h
-    main ENDP
+    or ax, ax            
+    jnz read_next       
+    ret
 
-END main
+saveNumber:
+    push ax
+    inc numbersCount    
+    ret
 
+
+
+print_numbers:
+    mov cx, numbersCount              
+
+print_loop:
+    pop ax                
+    mov dl, al             
+    mov ah, 02h           
+    int 21h               
+    loop print_loop        
+
+    ret
+
+parseNumbers:
+    ; розділення рядка на окремі числа та збереження їх у масив
+    ret
+
+sort:
+    ; сортування масиву чисел
+    ret
+
+calculateAverage:
+    ; обчислення середнього значення
+    ret
+
+calculateMedian:
+    ; обчислення медіани
+    ret
+end main
