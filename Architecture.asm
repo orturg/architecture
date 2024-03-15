@@ -66,6 +66,7 @@ calculateAverage:
     ; обчислення середнього значення
     ret
 
+
 calculateMedian:
     ; обчислення медіани
     ret
