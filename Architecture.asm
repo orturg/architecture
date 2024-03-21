@@ -16,6 +16,7 @@ start:
 
     mov ax, numbers
     call Input
+    call BubbleSort
     call Output
 
     mov ax, 4C00h
@@ -92,7 +93,6 @@ start:
 
 
     Output PROC
-        
         xor dx, dx
         xor ax, ax
 
@@ -149,4 +149,26 @@ start:
         ret
 
     printSpace ENDP
+
+    ;Bubble sort
+    BubbleSort PROC 
+        mov cx, word ptr lengthArr
+        dec cx  ; 
+    outerLoop:
+        push cx
+        lea si, numbers
+    innerLoop:
+        mov ax, [si]
+        cmp ax, [si+2]
+        jl nextStep
+        xchg [si+2], ax
+        mov [si], ax
+    nextStep:
+        add si, 2
+        loop innerLoop
+        pop cx
+        loop outerLoop
+        ret
+    BubbleSort endp  
+
 end start
