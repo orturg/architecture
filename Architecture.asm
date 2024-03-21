@@ -1,73 +1,89 @@
 .model small
 .stack 100h
-
 .data
-oneChar db ?
-numbersCount dw 0             
+    input_msg db 10, 13, 'Enter numbers: $'
+    space db ' ', '$'
+    buffer db 1000 Dup(?)
+    numbers dw 5 Dup(?)
+    lengthArr dw ?
+    filename db 'test.txt', '$' 
 
+    
 .code
-main:
+start:
     mov ax, @data
     mov ds, ax
 
-    call read_next
-    call print_numbers
+    mov ax, numbers
+    call Input
 
-    mov ah, 4Ch
+    mov ax, 4C00h
     int 21h
 
-read_next:
-    mov ah, 3Fh
-    mov bx, 0h 
-    mov cx, 1  
-    mov dx, offset oneChar  
-    int 21h 
-
-    ; do something with [oneChar]
-    cmp oneChar, ' '    
-    je saveNumber        
-    cmp oneChar, 0Dh     
-    je saveNumber        
-    cmp oneChar, 0Ah     
-    je saveNumber       
-
-    or ax, ax            
-    jnz read_next       
-    ret
-
-saveNumber:
-    push ax
-    inc numbersCount    
-    ret
+    Input proc 
+        welcomeMessage:
+            mov ah, 09h
+            lea dx, input_msg
+            int 21h ; Виведення повідомлення
 
 
+            mov ah, 0ah
+            xor di, di
+            mov dx, offset buffer ; 
+            int 21h ; зчитування строки
 
-print_numbers:
-    mov cx, numbersCount              
+            mov dl, 0ah
+            mov ah, 02
+            int 21h ; перехід стрічки
+            
+            mov si, offset buffer + 2 ; присвоюємо початок буферу лічильнику
+        convertNumbers:
+            cmp byte ptr [si], "-" ; перевіряємо, чи перший символ -
+            jnz ifNotMinus
+            inc si    ; пропускаємо -
+        ifNotMinus:
+            xor ax, ax
+            mov bx, 10  ; система числення
+        convert :
+            mov cl, [si] ; присвоюємо символ з буферу
 
-print_loop:
-    pop ax                
-    mov dl, al             
-    mov ah, 02h           
-    int 21h               
-    loop print_loop        
+            cmp cl, 0dh  ; перевірка, чи символ не останній
+            jz end
+            
+            cmp cl, ' ' ; перевіряємо, чи символ не є пробілом
+            je addToArray
 
-    ret
+        
+            sub cl, '0' ; переводимо символ у число 
+            mul bx     ; перевід в 10
+            add ax, cx  
+            inc si    
+            jmp convert 
 
-parseNumbers:
-    ; розділення рядка на окремі числа та збереження їх у масив
-    ret
-
-sort:
-    ; сортування масиву чисел
-    ret
-
-calculateAverage:
-    ; обчислення середнього значення
-    ret
-
-
-calculateMedian:
-    ; обчислення медіани
-    ret
-end main
+            xor cl, cl
+            jmp convertNumbers
+    
+        ; додаємо число до массиву
+        addToArray: 
+            xor cl, cl
+            mov bx, ax
+            inc si
+            mov numbers[di], ax
+            add di, 2
+            jmp convertNumbers
+    
+        ; запис останнього символа в масив, вихід із циклу переводу, задання значення довжини масиву
+        end:
+            xor cl, cl
+            mov numbers[di], ax
+            add di, 2
+            xor ax, ax
+            mov bx, 2
+            mov lengthArr, di
+            mov ax, lengthArr
+            div bx
+            mov lengthArr, ax
+            xor bx, bx
+            ret
+    Input endp
+end start
