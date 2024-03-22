@@ -23,10 +23,10 @@ start:
     int 21h
 
     Input proc 
-        welcomeMessage:
-            mov ah, 09h
-            lea dx, input_msg
-            int 21h ; Виведення повідомлення
+        ; welcomeMessage:
+        ;     mov ah, 09h
+        ;     lea dx, input_msg
+        ;     int 21h ; Виведення повідомлення
 
 
             mov ah, 0ah
