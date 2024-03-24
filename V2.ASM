@@ -172,6 +172,8 @@ start:
         ret
     BubbleSort endp  
 
+  
+
     Average PROC
         xor bx, bx 
         xor cx, cx 
@@ -185,9 +187,7 @@ start:
         cmp cx, lengthArr
         jl sumLoop
 
-        push word lengthArr
-        pop bl
-        div bl
+        div lengthArr
         call outputNum
         ret 
 
