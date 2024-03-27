@@ -17,8 +17,9 @@ start:
     mov ax, numbers
     call Input
     call BubbleSort
-    call Output
+    ; call Output
     call Average
+    call Mediana
 
     mov ax, 4C00h
     int 21h
@@ -192,5 +193,69 @@ start:
         ret 
 
     Average endp
+
+     Mediana Proc 
+
+        xor bx, bx 
+        xor cx, cx 
+        xor ax, ax 
+        xor dx, dx 
+        xor bl, bl
+        mov bl, 0
+        mov ax, lengthArr
+        mov bx, 2
+        div bx
+        mov cx, 0
+        cmp dx, cx
+        je medianaFromTwoNumbers
+        jmp medianaFromOneNumber
+
+        medianaFromTwoNumbers: 
+        jmp endAndPrint
+        xor ax, ax
+        xor dx, dx
+        mov dx, cx
+        xor cx, cx
+        goNext:
+        add bx, 2
+        inc cx
+        cmp cx, dx
+        jl goNext
+
+        mov ax, cx 
+        jmp endAndPrint
+
+        xor ax, ax
+        mov ax, numbers[bx]
+        add bx, 2 
+        add ax, numbers[bx]
+
+        mov bx, 2 
+        div bx
+        jmp endAndPrint
+
+        medianaFromOneNumber:
+        mov dx, ax
+        inc dx
+        xor ax, ax
+        goNextForOneNumber:
+        add bx, 2
+        inc cx
+        cmp cx, dx
+        jl goNextForOneNumber
+
+        mov ax, cx 
+        jmp endAndPrint
+
+        xor ax, ax
+        mov ax, numbers[bx]
+        jmp endAndPrint
+
+        endAndPrint:
+        call outputNum
+        ret 
+
+    Mediana endp
+
 
 end start
