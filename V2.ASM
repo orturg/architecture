@@ -34,10 +34,7 @@ start:
     ; call Output
     mov ax, 4C00h
     int 21h
-
-
     
-
 Input proc
     xor ax, ax
     xor di, di
@@ -62,15 +59,15 @@ Input proc
         int 21h   ;  ax = number of bytes read
 
         or ax, ax
-        je stop
+        je endInput
 
         cmp oneChar, ' '
-        jz putNum ; якщо прочитує пробіл, то перехід на запис числа
+        jz putToArray ; якщо прочитує пробіл, то перехід на запис числа
 
         cmp oneChar, 13 ; CR
-        je putNum
+        je putToArray
         cmp oneChar, 10 ; LF
-        je putNum
+        je putToArray
 
         cmp oneChar, '-'
         je charIsMinus
@@ -80,7 +77,6 @@ Input proc
         charIsMinus:
             mov chars[di], '1'
             jmp read_next
-
         
         putChar:
 
@@ -100,7 +96,7 @@ Input proc
             mov numbers[di], ax
             jmp read_next
             
-        putNum:
+        putToArray:
             cmp si, '1' ;перевіряємо на те, чи записаний символ - число
             jnz jump
 
@@ -133,11 +129,11 @@ Input proc
     xor si, si
     
     ;рахуємо розмір масиву
-    loopDiv2:
+    calculateLength:
         inc si
         sub di, 2
         cmp di, 0
-        ja loopDiv2
+        ja calculateLength
 
     ;задаємо розмір масиву 
     setArrayLength:
@@ -145,29 +141,6 @@ Input proc
         ret
 
     Input endp
-
-     Output PROC
-        xor dx, dx
-        xor ax, ax
-
-        xor di, di
-        xor si, si
-        mov si, lengthArr
-        printingNumbers:
-            mov ax, numbers[di]
-            call outputNum
-
-            increasingIndex:
-            call printSpace
-                add di, 2
-                dec si
-                cmp si, 0
-                jbe exit
-            loop printingNumbers
-
-        exit:
-            ret
-    Output endp
      
 
     outputNum PROC
@@ -262,9 +235,8 @@ Input proc
         jmp medianaFromOneNumber
 
         medianaFromTwoNumbers: 
-        xor ax, ax
         xor dx, dx
-        mov dx, cx
+        mov dx, ax
         xor cx, cx
         goNext:
         add bx, 2
@@ -274,8 +246,8 @@ Input proc
 
         xor ax, ax
         mov ax, numbers[bx]
-        ; add bx, 2 
-        ; add ax, numbers[bx]
+        add bx, 2 
+        add ax, numbers[bx]
 
 
         mov bx, 2 
