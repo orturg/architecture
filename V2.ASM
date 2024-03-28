@@ -1,12 +1,15 @@
 .model small
-.stack 100h
+.stack 100d
+.386
 .data
-    input_msg db 10, 13, 'Enter numbers: $'
+    bytesRead dw ?
+    number dw ?
     space db ' ', '$'
-    buffer db 1000 Dup(?)
-    numbers dw 6 Dup(?)
+    oneChar db ?, '$'
+    numbers dw 20000 Dup(?)
+    chars db 20000 Dup(?)
     lengthArr dw ?
-    ; filename db 'file1.txt', '$' 
+    newLine db 10, '$'
 
     
 .code
@@ -14,87 +17,136 @@ start:
     mov ax, @data
     mov ds, ax
 
-    mov ax, numbers
     call Input
     call BubbleSort
-    ; call Output
-    call Average
     call Mediana
 
+    mov ah, 09h
+    lea dx, newLine
+    int 21h
+
+    call Average
+
+    mov ah, 09h
+    lea dx, newLine
+    int 21h
+
+    ; call Output
     mov ax, 4C00h
     int 21h
 
-    Input proc 
-        ; welcomeMessage:
-        ;     mov ah, 09h
-        ;     lea dx, input_msg
-        ;     int 21h ; Виведення повідомлення
+
+    
+
+Input proc
+    xor ax, ax
+    xor di, di
+    xor si, si
+    ; mov numbers[0], 0
+
+    ;заповнюємо масив чарів нулями
+    fillCharWithZeroes:
+        mov chars[si], '0'
+        add si, 2
+        cmp si, 20000
+        jbe fillCharWithZeroes  
+
+    xor si, si  
 
 
-            mov ah, 0ah
-            xor di, di
-            mov dx, offset buffer ; 
-            int 21h ; зчитування стрічки
+    read_next:
+        mov ah, 3Fh
+        mov bx, 0h  ; stdin handle
+        mov cx, 1   ; 1 byte to read
+        mov dx, offset oneChar   ; read to ds:dx 
+        int 21h   ;  ax = number of bytes read
 
-            mov dl, 0ah
-            mov ah, 02
-            int 21h ; перехід стрічки
-            
-            mov si, offset buffer + 2 ; присвоюємо початок буферу лічильнику
-        convertNumbers:
-            cmp byte ptr [si], "-" ; перевіряємо, чи перший символ -
-            jnz ifNotMinus
-            inc si    ; пропускаємо -
-        ifNotMinus:
-            xor ax, ax
-            mov bx, 10  ; система числення
-        convert :
-            mov cl, [si] ; присвоюємо символ з буферу
+        or ax, ax
+        je stop
 
-            cmp cl, 0dh  ; перевірка, чи не символ не останній
-            jz inputEnd
-            
-            cmp cl, ' ' ; перевіряємо, чи символ не є пробілом
-            je addToArray
+        cmp oneChar, ' '
+        jz putNum ; якщо прочитує пробіл, то перехід на запис числа
+
+        cmp oneChar, 13 ; CR
+        je putNum
+        cmp oneChar, 10 ; LF
+        je putNum
+
+        cmp oneChar, '-'
+        je charIsMinus
+
+        jmp putChar
+
+        charIsMinus:
+            mov chars[di], '1'
+            jmp read_next
 
         
-            sub cl, '0' ; переводимо символ у число 
-            mul bx     ; перевід в 10
-            add ax, cx  
-            inc si    
-            jmp convert     ; повторюємо
+        putChar:
 
-            xor cl, cl
-            jmp convertNumbers
-    
-        ; додаємо число до массиву
-        addToArray: 
-            xor cl, cl
-            mov bx, ax
-            inc si
+        mov ax, numbers[di]
+        mov cl, oneChar
+        
+        sub cl, '0' ; отримуємо значення символу з ascii таблиці
+        mov bx, 10
+        mul bx ;переводимо числа в десяткове
+        jo ifOverFlow
+        add ax, cx
+        jo ifOverFlow
+
+        ; записуємо число в масив
+        next:
+            mov si, '1'
             mov numbers[di], ax
-            add di, 2
-            jmp convertNumbers
+            jmp read_next
+            
+        putNum:
+            cmp si, '1' ;перевіряємо на те, чи записаний символ - число
+            jnz jump
+
+
+            cmp chars[di], '1'
+            jne nextNum
+
+            neg numbers[di]
+
+            nextNum:
+                add di, 2
+                mov numbers[di], 0
+
+            jump:
+                mov si, '0'
+                jmp read_next
+
+        ifOverFlow:
+            mov numbers[di], 65535
+            jo read_next
+
+    endInput:
+
+    cmp si, '1' 
+    jnz putZeroToCheck
     
-        ; запис останнього символа в масив, вихід із циклу переводу, задання значення довжини масиву
-        inputEnd:
-            xor cl, cl
-            mov numbers[di], ax
-            add di, 2
-            xor ax, ax
-            mov bx, 2
-            mov lengthArr, di
-            mov ax, lengthArr
-            div bx
-            mov lengthArr, ax
-            xor bx, bx
-            ret
+    add di, 2
+
+    putZeroToCheck:
+    xor si, si
+    
+    ;рахуємо розмір масиву
+    loopDiv2:
+        inc si
+        sub di, 2
+        cmp di, 0
+        ja loopDiv2
+
+    ;задаємо розмір масиву 
+    setArrayLength:
+        mov lengthArr, si
+        ret
+
     Input endp
 
-     
-
-
-    Output PROC
+     Output PROC
         xor dx, dx
         xor ax, ax
 
@@ -141,6 +193,7 @@ start:
                 int 21h
                 
                 loop thirdStep
+                call printSpace
         ret
     outputNum ENDP
 
@@ -173,9 +226,7 @@ start:
         ret
     BubbleSort endp  
 
-  
-
-    Average PROC
+     Average PROC
         xor bx, bx 
         xor cx, cx 
         xor ax, ax 
@@ -194,7 +245,7 @@ start:
 
     Average endp
 
-     Mediana Proc 
+    Mediana Proc 
 
         xor bx, bx 
         xor cx, cx 
@@ -211,7 +262,6 @@ start:
         jmp medianaFromOneNumber
 
         medianaFromTwoNumbers: 
-        jmp endAndPrint
         xor ax, ax
         xor dx, dx
         mov dx, cx
@@ -222,13 +272,11 @@ start:
         cmp cx, dx
         jl goNext
 
-        mov ax, cx 
-        jmp endAndPrint
-
         xor ax, ax
         mov ax, numbers[bx]
-        add bx, 2 
-        add ax, numbers[bx]
+        ; add bx, 2 
+        ; add ax, numbers[bx]
+
 
         mov bx, 2 
         div bx
@@ -257,5 +305,5 @@ start:
 
     Mediana endp
 
-
-end start
+     
+  end start
