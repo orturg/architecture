@@ -31,7 +31,6 @@ start:
     lea dx, newLine
     int 21h
 
-    ; call Output
     mov ax, 4C00h
     int 21h
     
@@ -39,7 +38,6 @@ Input proc
     xor ax, ax
     xor di, di
     xor si, si
-    ; mov numbers[0], 0
 
     ;заповнюємо масив чарів нулями
     fillCharWithZeroes:
@@ -235,8 +233,10 @@ Input proc
         jmp medianaFromOneNumber
 
         medianaFromTwoNumbers: 
+        jmp endAndPrint
+        xor ax, ax
         xor dx, dx
-        mov dx, ax
+        mov dx, cx
         xor cx, cx
         goNext:
         add bx, 2
@@ -248,7 +248,6 @@ Input proc
         mov ax, numbers[bx]
         add bx, 2 
         add ax, numbers[bx]
-
 
         mov bx, 2 
         div bx
